@@ -7,10 +7,13 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.insert.Insert;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @SpringBootApplication
 public class ParsingSQLInsertAndSelectApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JSQLParserException {
         SpringApplication.run(ParsingSQLInsertAndSelectApplication.class, args);
 
         String SQL = "INSERT INTO public.monitoring_object_property "+
@@ -77,25 +80,39 @@ public class ParsingSQLInsertAndSelectApplication {
 //            e.printStackTrace();
 //        }
 
-        System.out.println("Parsing SQL INSERT statement");
-        String insertSQL = "Insert into Database.TargetTable " +
-                "select col1, col2, col3 from Database.SourceTable";
-        try {
+//        System.out.println("Parsing SQL INSERT statement");
+//        String insertSQL = "Insert into Database.TargetTable " +
+//                "select col1, col2, col3 from Database.SourceTable";
+//        try {
             Insert insertObj = (Insert) CCJSqlParserUtil.parse(SQL); //SQL   sqlInsert
-            System.out.println("Original Insert SQL details");
-            System.out.println("---------------------------");
+//            System.out.println("Original Insert SQL details");
+//            System.out.println("---------------------------");
             System.out.println("Target Database: " + insertObj.getTable().getSchemaName());
             System.out.println("Target Table: " + insertObj.getTable().getName());
-
+            System.out.println("Target withSelect: " + insertObj.getSelect());
+//
             System.out.println("Select statement of insert: " + insertObj.getColumns());
 //            System.out.println("Select statement of insert: " + insertObj.getSelect().toString());
 
+            Map<String, String> sqlMap = new HashMap<>();
+
+            String[] purge = {"VALUES", "(", ")"};
+            String value = String.valueOf(insertObj.getSelect());
+
+            for(int i= 0; i < purge.length; i++) {
+                value = value.replace(purge[i], "");
+            }
+            System.out.println("value =" + value);
+
+            String [] keys = String.valueOf(insertObj.getColumns()).split(", ");
+            String [] values = String.valueOf(value.trim()).split(", ");
+
+            for(int i = 0; i < keys.length; i++) {
+                sqlMap.put(keys[i], values[i] );
+            }
+            System.out.println(sqlMap);
 
 
-
-        } catch (JSQLParserException e) {
-            throw new RuntimeException(e);
-        }
 
 
 
